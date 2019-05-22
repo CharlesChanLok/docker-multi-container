@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t charleschanlok/mutli-container -f ./client/Dockerfile.dev ./client
+
+script:
+   - docker run -e CI=true charleschanlok/mutli-container npm run test -- --watchAll=false
+
+after_success:
+  - docker build -t charleschanlok/mutli-container-client ./client
+  - docker build -t charleschanlok/mutli-container-nginx ./nginx
+  - docker build -t charleschanlok/mutli-container-server ./server
+  - docker build -t charleschanlok/mutli-container-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push charleschanlok/mutli-container-client
+  - docker push charleschanlok/mutli-container-nginx
+  - docker push charleschanlok/mutli-container-server
+  - docker push charleschanlok/mutli-container-worker
